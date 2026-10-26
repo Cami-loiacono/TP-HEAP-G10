@@ -1,4 +1,105 @@
 package cola
 
-func CrearHeap[T any](funcion_cmp func(T, T) int) ColaPrioridad[T]{}
-func CrearHeapArr[T any](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T]{}
+const (
+	_CAPACIDAD_INICIAL = 5
+	_PANIC_COLA_VACIA = "La cola esta vacia"
+	_NUMERO_REDIMENSIONAR_DES = 2
+	_NUMERO_REDIMENSIONAR_EN = 4
+)
+
+type cmpHeap[T any] func(T, T) int
+
+type heap[T any] struct {
+	datos []T
+	cantidad int
+	cmp cmpHeap[T]
+}
+
+func CrearHeap[T any](cmp cmpHeap[T]) ColaPrioridad[T] {
+	return &heap[T]{
+		datos: make([]T, _CAPACIDAD_INICIAL),
+		cmp: cmp,
+	}
+}
+
+func CrearHeapArr[T any](arreglo []T, cmp cmpHeap[T]) ColaPrioridad[T] {
+	datos := make([]T, len(arreglo))
+	copy(datos, arreglo)
+	heapCreado := &heap[T]{datos: datos, cantidad: len(arreglo), cmp: cmp}
+	heapify(heapCreado.datos, heapCreado.cantidad, cmp)
+	return heapCreado
+}
+
+func heapify[T any](datos []T, cantidad int, cmp cmpHeap[T]) {
+	for i := cantidad/2 - 1; i >= 0; i-- {
+		downheap(datos, cmp, i)
+	}
+}
+
+func downheap[T any](datos []T, cmp cmpHeap[T], indice int) {
+	for {
+		hijoIzq := 2*indice + 1
+		hijoDer := 2*indice + 2
+		mayor := indice
+
+		if hijoIzq < len(datos) && cmp(datos[hijoIzq], datos[mayor]) > 0 {
+			mayor = hijoIzq
+		}
+		if hijoDer < len(datos) && cmp(datos[hijoDer], datos[mayor]) > 0 {
+			mayor = hijoDer
+		}
+		if mayor == indice {
+			return
+		}
+		datos[indice], datos[mayor] = datos[mayor], datos[indice]
+		indice = mayor
+	}
+}
+
+func (heap *heap[T]) VerMax() T {
+	if heap.EstaVacia() {
+		panic(_PANIC_COLA_VACIA)
+	}
+	return heap.datos[0]
+}
+
+func (heap *heap[T]) Cantidad() int {
+	return heap.cantidad
+}
+
+func (heap *heap[T]) EstaVacia() bool {
+	return heap.cantidad == 0
+}
+
+func (heap *heap[T]) Desencolar() T {
+	if heap.EstaVacia() {
+		panic(_PANIC_COLA_VACIA)
+	}
+	maximoPrimerElemento := heap.datos[0]
+	heap.datos[0] = heap.datos[heap.cantidad]
+	heap.cantidad--
+	downheap(heap.datos,heap.cmp, 0)
+	if  len(heap.datos) > _CAPACIDAD_INICIAL && heap.cantidad * _NUMERO_REDIMENSIONAR_DES <= len(heap.datos) {
+		redimensionar(heap, len(heap.datos)/_NUMERO_REDIMENSIONAR_DES)
+	}
+	return maximoPrimerElemento
+}
+
+func (heap *heap[T]) Encolar(elemento T){
+	if heap.cantidad == len(heap.datos) {
+		redimensionar(heap, len(heap.datos)* _NUMERO_REDIMENSIONAR_EN)
+	}
+	heap.datos[heap.cantidad] = elemento
+	heap.cantidad++
+	upheap(heap.datos, heap.cmp, heap.cantidad-1)
+}
+
+func upheap[T any](datos []T, cmp cmpHeap[T], indice int) {
+	
+}
+
+func redimensionar[T any](heap *heap[T], nuevaCapacidad int) {
+	nuevoDatos := make([]T, nuevaCapacidad)
+	copy(nuevoDatos, heap.datos)
+	heap.datos = nuevoDatos
+}
