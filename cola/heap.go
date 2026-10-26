@@ -95,7 +95,14 @@ func (heap *heap[T]) Encolar(elemento T){
 }
 
 func upheap[T any](datos []T, cmp cmpHeap[T], indice int) {
-	
+	for indice > 0 {
+		padre := (indice - 1) / 2
+		if cmp(datos[indice], datos[padre]) <= 0 {
+			return
+		}
+		datos[indice], datos[padre] = datos[padre], datos[indice]
+		indice = padre
+	}
 }
 
 func redimensionar[T any](heap *heap[T], nuevaCapacidad int) {
