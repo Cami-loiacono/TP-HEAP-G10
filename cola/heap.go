@@ -3,8 +3,8 @@ package cola
 const (
 	_CAPACIDAD_INICIAL = 5
 	_PANIC_COLA_VACIA = "La cola esta vacia"
-	_NUMERO_REDIMENSIONAR_DES = 2
-	_NUMERO_REDIMENSIONAR_EN = 4
+	_NUMERO_REDIMENSIONAR_DES = 4
+	_NUMERO_REDIMENSIONAR_EN = 2
 )
 
 type cmpHeap[T any] func(T, T) int
@@ -23,11 +23,11 @@ func CrearHeap[T any](cmp cmpHeap[T]) ColaPrioridad[T] {
 }
 
 func CrearHeapArr[T any](arreglo []T, cmp cmpHeap[T]) ColaPrioridad[T] {
-	datos := make([]T, len(arreglo))
+	datos := make([]T, max(len(arreglo), _CAPACIDAD_INICIAL))
 	copy(datos, arreglo)
-	heapCreado := &heap[T]{datos: datos, cantidad: len(arreglo), cmp: cmp}
-	heapify(heapCreado.datos, heapCreado.cantidad, cmp)
-	return heapCreado
+	heapNuevo := &heap[T]{datos: datos, cantidad: len(arreglo), cmp: cmp}
+	heapify(heapNuevo.datos, heapNuevo.cantidad, cmp)
+	return heapNuevo
 }
 
 func heapify[T any](datos []T, cantidad int, cmp cmpHeap[T]) {
@@ -36,11 +36,11 @@ func heapify[T any](datos []T, cantidad int, cmp cmpHeap[T]) {
 	}
 }
 
-func downheap[T any](datos []T, cantidad int, cmp cmpHeap[T], indice int) {
+func downheap[T any](datos []T, cantidad int, cmp cmpHeap[T], padre int) {
 	for {
-		IndiceHijoIzq := 2*indice + 1
-		IndiceHijoDer := 2*indice + 2
-		mayor := indice
+		IndiceHijoIzq := 2*padre + 1
+		IndiceHijoDer := 2*padre + 2
+		mayor := padre
 
 		if IndiceHijoIzq < cantidad && cmp(datos[IndiceHijoIzq], datos[mayor]) > 0 {
 			mayor = IndiceHijoIzq
@@ -48,11 +48,11 @@ func downheap[T any](datos []T, cantidad int, cmp cmpHeap[T], indice int) {
 		if IndiceHijoDer < cantidad && cmp(datos[IndiceHijoDer], datos[mayor]) > 0 {
 			mayor = IndiceHijoDer
 		}
-		if mayor == indice {
+		if mayor == padre {
 			return
 		}
-		datos[indice], datos[mayor] = datos[mayor], datos[indice]
-		indice = mayor
+		datos[padre], datos[mayor] = datos[mayor], datos[padre]
+		padre = mayor
 	}
 }
 
@@ -78,16 +78,16 @@ func (heap *heap[T]) Desencolar() T {
 	maximoPrimerElemento := heap.datos[0]
 	heap.cantidad--
 	heap.datos[0] = heap.datos[heap.cantidad]
-	downheap(heap.datos,heap.cmp, 0)
-	if  len(heap.datos) > _CAPACIDAD_INICIAL && heap.cantidad * _NUMERO_REDIMENSIONAR_DES <= len(heap.datos) {
-		redimensionar(heap, len(heap.datos)/_NUMERO_REDIMENSIONAR_DES)
+	downheap(heap.datos, heap.cantidad, heap.cmp, 0)
+	if len(heap.datos) > _CAPACIDAD_INICIAL && heap.cantidad*_NUMERO_REDIMENSIONAR_DES <= len(heap.datos) {
+		redimensionar(heap, max(len(heap.datos)/_NUMERO_REDIMENSIONAR_EN, _CAPACIDAD_INICIAL))
 	}
 	return maximoPrimerElemento
 }
 
 func (heap *heap[T]) Encolar(elemento T){
 	if heap.cantidad == len(heap.datos) {
-		redimensionar(heap, len(heap.datos)* _NUMERO_REDIMENSIONAR_EN)
+		redimensionar(heap, len(heap.datos)*_NUMERO_REDIMENSIONAR_EN)
 	}
 	heap.datos[heap.cantidad] = elemento
 	heap.cantidad++
@@ -109,4 +109,12 @@ func redimensionar[T any](heap *heap[T], nuevaCapacidad int) {
 	nuevoDatos := make([]T, nuevaCapacidad)
 	copy(nuevoDatos, heap.datos)
 	heap.datos = nuevoDatos
+}
+
+func Heapsort[T any](arreglo []T, cmp cmpHeap[T]){
+	heapify(arreglo, len(arreglo), cmp)
+	for i := len(arreglo) - 1; i >= 0; i-- {
+		arreglo[0], arreglo[i] = arreglo[i], arreglo[0]
+		downheap(arreglo, i, cmp, 0)
+	}
 }
