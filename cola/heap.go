@@ -32,21 +32,21 @@ func CrearHeapArr[T any](arreglo []T, cmp cmpHeap[T]) ColaPrioridad[T] {
 
 func heapify[T any](datos []T, cantidad int, cmp cmpHeap[T]) {
 	for i := cantidad/2 - 1; i >= 0; i-- {
-		downheap(datos, cmp, i)
+		downheap(datos, cantidad, cmp, i)
 	}
 }
 
-func downheap[T any](datos []T, cmp cmpHeap[T], indice int) {
+func downheap[T any](datos []T, cantidad int, cmp cmpHeap[T], indice int) {
 	for {
-		hijoIzq := 2*indice + 1
-		hijoDer := 2*indice + 2
+		IndiceHijoIzq := 2*indice + 1
+		IndiceHijoDer := 2*indice + 2
 		mayor := indice
 
-		if hijoIzq < len(datos) && cmp(datos[hijoIzq], datos[mayor]) > 0 {
-			mayor = hijoIzq
+		if IndiceHijoIzq < cantidad && cmp(datos[IndiceHijoIzq], datos[mayor]) > 0 {
+			mayor = IndiceHijoIzq
 		}
-		if hijoDer < len(datos) && cmp(datos[hijoDer], datos[mayor]) > 0 {
-			mayor = hijoDer
+		if IndiceHijoDer < cantidad && cmp(datos[IndiceHijoDer], datos[mayor]) > 0 {
+			mayor = IndiceHijoDer
 		}
 		if mayor == indice {
 			return
@@ -76,8 +76,8 @@ func (heap *heap[T]) Desencolar() T {
 		panic(_PANIC_COLA_VACIA)
 	}
 	maximoPrimerElemento := heap.datos[0]
-	heap.datos[0] = heap.datos[heap.cantidad]
 	heap.cantidad--
+	heap.datos[0] = heap.datos[heap.cantidad]
 	downheap(heap.datos,heap.cmp, 0)
 	if  len(heap.datos) > _CAPACIDAD_INICIAL && heap.cantidad * _NUMERO_REDIMENSIONAR_DES <= len(heap.datos) {
 		redimensionar(heap, len(heap.datos)/_NUMERO_REDIMENSIONAR_DES)
